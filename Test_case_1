@@ -1,0 +1,61 @@
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.testng.annotations.AfterMethod;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Parameters;
+import org.testng.annotations.Test;
+
+public class AutomationTest {
+    WebDriver driver;
+
+    @BeforeMethod
+    @Parameters("browser")
+    public void setup(String browser) {
+        if (browser.equals("chrome")) {
+            System.setProperty("webdriver.chrome.driver", "path/to/chromedriver");
+            driver = new ChromeDriver();
+        }
+        // Add more browsers as needed
+    }
+
+    @Test
+    public void testScenario() {
+        // 1. Open URL
+        driver.get("https://tutorialsninja.com/demo/index.php?route=common/home");
+
+        // 2. Add 2 MacBook's in shopping cart
+        WebElement macBookElement = driver.findElement(By.xpath("//a[@href='https://tutorialsninja.com/demo/index.php?route=product/product&product_id=43']"));
+        macBookElement.click();
+        driver.findElement(By.id("input-quantity")).sendKeys("2");
+        driver.findElement(By.id("button-cart")).click();
+
+        // 3. Validate success message appears after adding product to the shopping cart
+        WebElement successMessage = driver.findElement(By.xpath("//div[@class='alert alert-success']"));
+        Assert.assertTrue(successMessage.isDisplayed());
+
+        // 4. Open shopping Cart
+        driver.findElement(By.id("cart")).click();
+
+        // 5. Validate the navigation for by Comparing URL
+        String cartUrl = driver.getCurrentUrl();
+        Assert.assertEquals(cartUrl, "https://tutorialsninja.com/demo/index.php?route=checkout/cart");
+
+        // 6. Validate Unit price and Total price is updating Correctly
+        WebElement unitPrice = driver.findElement(By.xpath("//td[@class='text-right']"));
+        WebElement totalPrice = driver.findElement(By.xpath("//td[@class='text-right']"));
+        Assert.assertTrue(unitPrice.getText().contains("$602.00"));
+        Assert.assertTrue(totalPrice.getText().contains("$1,204.00"));
+
+        // 7. If Pricing is not updating correct then fail the case
+        if (!unitPrice.getText().contains("$602.00") ||!totalPrice.getText().contains("$1,204.00")) {
+            Assert.fail("Pricing is not updating correctly");
+        }
+    }
+
+    @AfterMethod
+    public void tearDown() {
+        driver.quit();
+    }
+}
